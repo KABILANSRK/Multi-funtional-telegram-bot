@@ -13,12 +13,14 @@ This bot can automate these following tasks
   5. Greeting: When the user sends the command "/start", the bot greets the user with "Hey! Hows it going?"
 
   6. SOS(Emergency Numbers): When the user sends the command "/sos ,the bot asks the user to set the country name. Then, when the user sends the country name, the bot retrieves the current SOS numbers for that country and returns it for example: if the user sets the country as "India" the bot returns 
-      Emergency Numbers For India
-      Ambulance = 102
-      Fire = 101
-      Police = 100
+        Emergency Numbers For India
+        Ambulance = 102
+        Fire = 101
+        Police = 100
 
   7. Commands : This command returns all the available commands 
+
+  8. Reels : When the user sends the command "/sos ,the bot asks the user to send instagram reel link, when the user sends the link the bot retrieves the reels video from instagram and sends it to the user
 ## Links
 [Releases](https://github.com/Philotheephilix/Multi-funtional-telegram-bot/releases)
 
@@ -51,6 +53,18 @@ BotFather is the official bot used to create and manage Telegram bots. Here are 
       4.Give a name to your bot and choose a username for it. The username should end with "bot". For example, MyTestBot.
   
       5.BotFather will then give you an API token that you will use to communicate with your bot. Save this token somewhere safe as you will need it later.
+
+      6. And also add these commands to the bot
+
+              start - greet to check life of the bot
+              tell_joke - returns a random joke
+              weather - view the weather of the city
+              check_email - check email for unread messages
+              jpg2pdf - converts images to pdf
+              sos - emergency contact number
+              commands - list all commands
+              reels - download instagram reels
+
   
   HOORAY Your bot is now created and ready to be configured.
 
@@ -63,17 +77,32 @@ BotFather is the official bot used to create and manage Telegram bots. Here are 
 	pillow
   
 	pypdf (version 2.0 as latest 3.0 has some issues)
+    
+	cryptography
+  
+	dotenv
+    
+	instagrapi
   
 4. Configure email and API tokens 
 
-5.Run this script in Python IDLE or in some IDE 
+5. Run Initialize.py script in Python IDLE or in some IDE first to configure all needed credentials 
+
+6. Then, Run multi_bot.py to start the bot
 
 
 
 ## Security 
-Our goal is to provide secure environment so we have no unneccessary online communication like analytics it's just standalone on your desk
-As we give our E-Mail id to our bot we don't know how secure is this we are working on that to improvise the privacy.
+  Our goal is to provide secure environment so we have no unneccessary online communication like analytics it's just standalone on your desk
 
+  As we give our E-Mail id to our bot we don't know how secure is this we are working on that to improvise the privacy.
+
+  We have included environmental variable to store all the credentials which is encrypted while executing initialize.py and will be only decrypted during bot startup
+
+  The most important thing is that it is based on rolling codes and the encryption key changes everytime you start the bot and is stored securely
+
+## Feature request 
+  If you guys are into some feature just feel free to contact me through  [TELEGRAM](https://t.me/philo_thee_philix)
 
 ## Disclaimer 
-Anyone can download or copy our code to use and redistribute but if you copy the whole code to someother projects kindly don't forget to give credits
+  Anyone can download or copy our code to use and redistribute but if you copy the whole code to someother projects kindly don't forget to give credits
