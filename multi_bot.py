@@ -21,38 +21,43 @@ from cryptography.fernet import Fernet
 
 is_weather="0"
 sos_active="0"
-reels_active="0"
 string=" "
 cl = Client()
 tempdir=os.getcwd()
 Credentials={}
-
-
+bot = ""
+BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
+message=""
+path=os.getcwd()
 #Code for handling credential encryption and decryption
-a=1
-if a==1:
-    try:
-        with open('crypt.key', 'rb') as filekey:
-            key = filekey.read()
+def decrypt():
+    a=1
+    if a==1:
+        try:
+            with open('crypt.key', 'rb') as filekey:
+                key = filekey.read()
         
-        fernet = Fernet(key)
-        with open('.env', 'rb') as file:
-            original = file.read()
-        decrypted = fernet.decrypt(original)
-        with open('.env', 'wb+') as decrypted_file:
-            decrypted_file.write(decrypted)
-            dnc=decrypted_file.read()
-            print("decrypted")
-    except :
-        print("Invalid Key or Already decrypted")
-    
-    #loading credentials and keys from env file
-    load_dotenv(tempdir+"\.env")
-    username=os.getenv("E-mail_for_checking_email")
-    password=os.getenv("Password_for_checking_mail")
-    TELE_API_KEY = os.getenv("Telegram_bot_API")
-    print(TELE_API_KEY)
-    OW_API = os.getenv("Open_Weather_API")
+            fernet = Fernet(key)
+            with open('.env', 'rb') as file:
+                original = file.read()
+            decrypted = fernet.decrypt(original)
+            with open('.env', 'wb+') as decrypted_file:
+                decrypted_file.write(decrypted)
+                dnc=decrypted_file.read()
+                print("decrypted")
+        except :
+            print("Invalid Key or Already decrypted")
+decrypt()
+
+#loading credentials and keys from env file
+
+load_dotenv(tempdir+"\.env")
+username=os.getenv("E-mail_for_checking_email")
+password=os.getenv("Password_for_checking_mail")
+TELE_API_KEY = os.getenv("Telegram_bot_API")
+print(TELE_API_KEY)
+OW_API = os.getenv("Open_Weather_API")
+def encrypt():
     with open(".env","r") as credentials:
         Credentials=credentials.readlines()
         print(Credentials)
@@ -72,14 +77,13 @@ if a==1:
             enc=encrypted_file.read()
             print("encrypted")
     except:
-        print("encrypt failed")    
-
-print(Credentials)
+        print("encrypt failed")   
+    print(Credentials) 
+encrypt()
 
 # Directory creation and verification
 def init_dirs():
     req_dir=("reels","temppdf","merged","tempimg")
-    path=os.getcwd()
     try:
         for i in req_dir:
             os.mkdir(path+"\\"+i)
@@ -88,9 +92,11 @@ def init_dirs():
         print("dirs already exists")
 init_dirs()
 #Bot initialization
-bot = telebot.TeleBot(TELE_API_KEY)
-BASE_URL = "http://api.openweathermap.org/data/2.5/weather?"
-bot = telebot.TeleBot(TELE_API_KEY)
+def bot_init():
+    global bot
+    bot = telebot.TeleBot(TELE_API_KEY)
+    bot = telebot.TeleBot(TELE_API_KEY)
+bot_init()
 # Initialize Joke.txt Dataset
 def remove(list):
     pattern = '[0-9]'
@@ -99,10 +105,18 @@ def remove(list):
 #Code for file handling (jpg2pdf) 
 @bot.message_handler(content_types=['photo'])
 def handle_photos(message):
+    msgid=str(message.chat.id)
+    try:
+        os.mkdir(path+"\\tempimg\\"+msgid+"\\")
+        os.mkdir(path+"\\temppdf\\"+msgid+"\\")
+        os.mkdir(path+"\\merged\\"+msgid+"\\")
+    except:
+        print("folder exists")
     file_id = message.photo[-1].file_id
     file = bot.get_file(file_id)
     downloaded_file = bot.download_file(file.file_path)
-    file_name = 'tempimg/' + file.file_path.split('/')[-1]
+    print(file.file_path)
+    file_name = 'tempimg/'+msgid + "/"+file.file_path.split('/')[-1]
     with open(file_name, 'wb') as new_file:
         new_file.write(downloaded_file)
     bot.reply_to(message, "Photo saved!")
@@ -110,29 +124,24 @@ def handle_photos(message):
 #Code  for handling /commands
 @bot.message_handler(commands=["commands"])
 def message(message):
-    commands="""/start - greet to check life of the bot
-/tell_joke - returns a random joke
-/weather - view the weather of the city
-/check_email - check email for unread messages
-/jpg2pdf - converts images to pdf
-/sos - emergency contact number
-/commands - return list of commands
-"""
+    bot_action=open("bot_action.txt","r")
+    commands=bot_action.read()
     bot.reply_to(message,"Here are the list of commands \n"+commands)
 #Code to handle jpg2pdf conversion
 @bot.message_handler(commands=["jpg2pdf"])
 def convert(message):
-    dir=tempdir+"\\tempimg"
+    msgid=str(message.chat.id)
+    dir=tempdir+"\\tempimg\\"+msgid+"\\"
     a=os.listdir(dir)
     print(a)
     for i in a:
-        dirf=tempdir+"\\tempimg\\"+i
-        dirsav=tempdir+"\\temppdf\\"+i+".pdf"
+        dirf=tempdir+"\\tempimg\\"+msgid+"\\"+i
+        dirsav=tempdir+"\\temppdf\\"+msgid+"\\"+i+".pdf"
         im=Image.open(dirf)
         imc=im.convert('RGB')
         imc.save(dirsav)
-    pdfs_dir =tempdir+"\\temppdf\\"  
-    merged_file_name = 'merged\\merged.pdf'
+    pdfs_dir =tempdir+"\\temppdf\\"+msgid+"\\"
+    merged_file_name = 'merged\\'+msgid+'\\merged.pdf'
     pdf_merger = PdfFileMerger()
     for filename in os.listdir(pdfs_dir):
         if filename.endswith('.pdf'):
@@ -142,17 +151,17 @@ def convert(message):
     with open(merged_file_name, 'wb') as merged_file:
         pdf_merger.write(merged_file)
     print('PDFs merged successfully!')
-    with open("merged\\merged.pdf", 'rb') as pdf_file:
+    with open("merged\\"+msgid+"\\merged.pdf", 'rb') as pdf_file:
         bot.send_document(message.chat.id, pdf_file)
         bot.reply_to(message, "PDF file sent")
     def junk_removal():
-        os.remove("merged\\merged.pdf")
+        os.remove("merged\\"+msgid+"\\merged.pdf")
         print("merged pdf deleted....")
         for i in a:
-            os.remove("tempimg\\"+i)
+            os.remove("tempimg\\"+msgid+"\\"+i)
         print("temp img is deleted")
         for i in a:
-            os.remove("temppdf\\"+i+".pdf")
+            os.remove("temppdf\\"+msgid+"\\"+i+".pdf")
         print("temp pdf is deleted..")
     junk_removal()
 #Code to handle /check_email command
@@ -184,13 +193,12 @@ def tell_joke(message):
 def greet(message):
     bot.reply_to(message,"Hey! Hows it going?")
 #Combined Code to handle weather , sos , reels command
-@bot.message_handler(commands=["weather","sos","reels"])
+@bot.message_handler(commands=["weather","sos"])
 def weather(message):
     status=str(message.text)
     print(status)
     global sos_active
     global is_weather
-    global reels_active
     if  status=="/weather":
         is_weather="1"
         bot.reply_to(message, "Set City")
@@ -198,8 +206,7 @@ def weather(message):
         sos_active="1"
         bot.reply_to(message,"Enter Country Name")
     else:
-        reels_active="1"
-        bot.reply_to(message,"Enter reels link")  
+        pass  
 #Code to handle execution of weather , sos, reels  
 @bot.message_handler(func=lambda m: True)
 def city(message):
@@ -259,6 +266,7 @@ def city(message):
             bot.send_message(message.chat.id, gw)
             bot.send_message(message.chat.id, sr)
             bot.send_message(message.chat.id, st)
+            print(message.chat.id)
         is_weather="0"
     elif sos_active=="1":
         f=open("sos_list.txt","r")
@@ -276,14 +284,6 @@ def city(message):
                 sos="Emergency Numbers For "+state+"\nAmbulance = "+tmplist[0]+"\nFire = "+tmplist[1]+"\nPolice = "+tmplist[2]
                 bot.reply_to(message,sos)
         sos_active="0"
-    elif reels_active=="1":
-        ori_reel=str(message.text)
-        reel=ori_reel.split("https://www.instagram.com/reel/")
-        base_url="https://www.ddinstagram.com/reel/"
-        Reel_to_send=base_url+reel[1]
-        Reel_markup="[REEL]("+Reel_to_send+")"
-        print(Reel_markup)
-        bot.reply_to(message,Reel_markup)
     else:
         status = str(message.text)
         if status.startswith("https://www.instagram.com/reel/"):
@@ -306,5 +306,6 @@ def city(message):
             bot.reply_to(message,Post_markup)
         else:
             bot.reply_to(message,"Enter valid command \n type /commands to list all commands")
+    
 #polling command to receive commands from bot
 bot.infinity_polling()
